@@ -1,0 +1,53 @@
+name: Flutter CI - APK e IPA
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    name: Build Flutter (APK & Source IOS)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Instalação do SDK Flutter
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.29.2"
+          channel: "stable"
+
+      # Instalação das dependências
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Análise do código
+      - name: Analyze project source
+        run: flutter analyze
+
+      # Geração APK (Android)
+      - name: Build APK
+        run: flutter build apk --release
+
+      # Disponibilizar APK gerado
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-release
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+      # Cria um ZIP do código iOS (Xcode)
+      - name: Zip and upload Xcode project
+        run: |
+          zip -r ios_project.zip ios
+        shell: bash
+
+      # Upload ZIP do código Xcode
+      - name: Upload Xcode project Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-xcode-project
+          path: ios_project.zip
